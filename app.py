@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageOps
 import qrcode
 import io
 import cv2

@@ -96,127 +96,152 @@ with tab1:
                 st.success(f"Record Verified for **{user_data.get('Name')}**!")
                 
                 membership_id = str(user_data.get('Membership'))
-            safe_membership = membership_id.replace('/', '_')
-            
-            reg_df = pd.read_csv("registrations_log.csv")
-            is_registered = membership_id in reg_df['Membership'].astype(str).values
-            
-            if is_registered:
-                st.info("✅ You have already successfully registered for this program!")
+                safe_membership = membership_id.replace('/', '_')
                 
-                pass_path = f"passes/Pass_{safe_membership}.jpg"
+                reg_df = pd.read_csv("registrations_log.csv")
+                is_registered = membership_id in reg_df['Membership'].astype(str).values
                 
-                if os.path.exists(pass_path):
-                    st.image(pass_path, caption="Your Event Entry Pass", width='stretch')
+                if is_registered:
+                    st.info("✅ You have already successfully registered for this program!")
                     
-                    with open(pass_path, "rb") as file:
-                        st.download_button(
-                            label="📥 Download Pass Again",
-                            data=file,
-                            file_name=f"Pass_{safe_membership}.jpg",
-                            mime="image/jpeg"
-                        )
-                else:
-                    st.warning("We have your registration on file, but couldn't find your pass image. Please contact the administrator.")
-            
-            else:
-                with st.form("registration_form"):
-                    st.markdown("### 📋 Confirm Your Information")
+                    pass_path = f"passes/Pass_{safe_membership}.jpg"
                     
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.write(f"**Designation:** {user_data.get('Designation')}")
-                        st.write(f"**Unit:** {user_data.get('Unit')}")
-                        st.write(f"**Cluster:** {user_data.get('Cluster')}")
-                        st.write(f"**Registered Mobile:** {user_data.get('Mobile')}")
-                    with col2:
-                        st.write(f"**Zone:** {user_data.get('Zone')}")
-                        st.write(f"**District:** {user_data.get('District')}")
-                        st.write(f"**Membership:** {user_data.get('Membership')}")
-
-                    st.markdown("---")
-
-                    attendance = st.radio("Will you be attending the program?", ["Yes", "No"], index=0)
-                    
-                    wa_same = st.radio(
-                        f"Is your WhatsApp number the same as your registered mobile number ({user_data.get('Mobile')})?", 
-                        ["Yes", "No"]
-                    )
-                    
-                    whatsapp_no = user_data.get('Mobile')
-                    if wa_same == "No":
-                        whatsapp_no = st.text_input("Enter your WhatsApp Number:", value="").strip()
-                    
-                    uploaded_photo = st.file_uploader("Upload your profile photo (JPG/PNG):", type=["jpg", "jpeg", "png"])
-                    
-                    submit_btn = st.form_submit_button("Complete Registration & Generate Pass")
-
-                if submit_btn:
-                    if attendance == "No":
-                        reg_data = pd.DataFrame([{
-                            "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                            "Membership": membership_id,
-                            "Name": user_data.get('Name'),
-                            "Attending": attendance,
-                            "WhatsApp": whatsapp_no
-                        }])
-                        reg_data.to_csv("registrations_log.csv", mode='a', header=False, index=False)
-                        st.info("Thank you for updating your status. We hope to see you at future events!")
-                        
-                    elif not uploaded_photo:
-                        st.error("Please upload a profile photo to complete your pass generation.")
-                        
-                    else:
-                        reg_id = f"REG-{membership_id}"
-                        
-                        qr = qrcode.QRCode(version=1, box_size=6, border=2)
-                        qr.add_data(reg_id)
-                        qr.make(fit=True)
-                        qr_img = qr.make_image(fill_color="black", back_color="white").convert("RGB")
-                        
-                        card_width, card_height = 800, 1000
-                        poster = Image.new("RGB", (card_width, card_height), color=(245, 247, 250))
-                        draw = ImageDraw.Draw(poster)
-                        
-                        draw.rectangle([(0, 0), (card_width, 140)], fill=(24, 43, 73))
-                        draw.text((40, 45), "OFFICIAL ENTRY PASS", fill=(255, 255, 255))
-                        
-                        photo_img = Image.open(uploaded_photo).convert("RGB").resize((220, 220))
-                        poster.paste(photo_img, (50, 180))
-                        
-                        draw.text((300, 180), f"Name: {user_data.get('Name')}", fill=(0, 0, 0))
-                        draw.text((300, 230), f"ID: {reg_id}", fill=(200, 30, 30))
-                        draw.text((300, 280), f"Unit: {user_data.get('Unit')}", fill=(50, 50, 50))
-                        draw.text((300, 320), f"Zone: {user_data.get('Zone')}", fill=(50, 50, 50))
-                        draw.text((300, 360), f"WhatsApp: {whatsapp_no}", fill=(50, 50, 50))
-
-                        qr_img = qr_img.resize((200, 200))
-                        poster.paste(qr_img, (550, 740))
-                        draw.text((540, 950), "Scan for Verification", fill=(100, 100, 100))
-
-                        pass_path = f"passes/Pass_{safe_membership}.jpg"
-                        poster.save(pass_path, format="JPEG")
-
-                        reg_data = pd.DataFrame([{
-                            "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                            "Membership": membership_id,
-                            "Name": user_data.get('Name'),
-                            "Attending": attendance,
-                            "WhatsApp": whatsapp_no
-                        }])
-                        reg_data.to_csv("registrations_log.csv", mode='a', header=False, index=False)
-
-                        st.success("🎉 Registration Completed Successfully!")
-                        st.balloons() # <-- This triggers a fun animation on their screen!
-                        st.image(poster, caption="Your Event Entry Pass", width='stretch')
+                    if os.path.exists(pass_path):
+                        st.image(pass_path, caption="Your Event Entry Pass", width='stretch')
                         
                         with open(pass_path, "rb") as file:
                             st.download_button(
-                                label="📥 Download Pass to Share on WhatsApp",
+                                label="📥 Download Pass Again",
                                 data=file,
                                 file_name=f"Pass_{safe_membership}.jpg",
                                 mime="image/jpeg"
                             )
+                    else:
+                        st.warning("We have your registration on file, but couldn't find your pass image. Please contact the administrator.")
+                
+                else:
+                    with st.form("registration_form"):
+                        st.markdown("### 📋 Confirm Your Information")
+                        
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.write(f"**Designation:** {user_data.get('Designation')}")
+                            st.write(f"**Unit:** {user_data.get('Unit')}")
+                            st.write(f"**Cluster:** {user_data.get('Cluster')}")
+                            st.write(f"**Registered Mobile:** {user_data.get('Mobile')}")
+                        with col2:
+                            st.write(f"**Zone:** {user_data.get('Zone')}")
+                            st.write(f"**District:** {user_data.get('District')}")
+                            st.write(f"**Membership:** {user_data.get('Membership')}")
+
+                        st.markdown("---")
+
+                        attendance = st.radio("Will you be attending the program?", ["Yes", "No"], index=0)
+                        
+                        wa_same = st.radio(
+                            f"Is your WhatsApp number the same as your registered mobile number ({user_data.get('Mobile')})?", 
+                            ["Yes", "No"]
+                        )
+                        
+                        whatsapp_no = user_data.get('Mobile')
+                        if wa_same == "No":
+                            whatsapp_no = st.text_input("Enter your WhatsApp Number:", value="").strip()
+                        
+                        uploaded_photo = st.file_uploader("Upload your profile photo (JPG/PNG):", type=["jpg", "jpeg", "png"])
+                        
+                        submit_btn = st.form_submit_button("Complete Registration & Generate Pass")
+
+                    if submit_btn:
+                        if attendance == "No":
+                            reg_data = pd.DataFrame([{
+                                "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                                "Membership": membership_id,
+                                "Name": user_data.get('Name'),
+                                "Attending": attendance,
+                                "WhatsApp": whatsapp_no
+                            }])
+                            reg_data.to_csv("registrations_log.csv", mode='a', header=False, index=False)
+                            st.info("Thank you for updating your status. We hope to see you at future events!")
+                            
+                        elif not uploaded_photo:
+                            st.error("Please upload a profile photo to complete your pass generation.")
+                            
+                        else:
+                            reg_id = f"REG-{membership_id}"
+                            
+                            qr = qrcode.QRCode(version=1, box_size=6, border=2)
+                            qr.add_data(reg_id)
+                            qr.make(fit=True)
+                            qr_img = qr.make_image(fill_color="black", back_color="white").convert("RGB")
+                            
+                            # --- GENERATE POSTER USING VIVISE TEMPLATE ---
+                            template_path = "template.jpg"
+                            
+                            if os.path.exists(template_path):
+                                poster = Image.open(template_path).convert("RGB")
+                                poster = poster.resize((800, 1067)) 
+                                draw = ImageDraw.Draw(poster)
+                                
+                                # 1. Place the QR Code (<QR>)
+                                qr_size = 140
+                                qr_img_resized = qr_img.resize((qr_size, qr_size))
+                                poster.paste(qr_img_resized, (35, 30))
+                                
+                                # 2. Place the User Photo (<PHOTO>)
+                                photo_width, photo_height = 220, 260
+                                user_photo = Image.open(uploaded_photo).convert("RGB").resize((photo_width, photo_height))
+                                poster.paste(user_photo, (105, 695))
+                                
+                                # 3. Place the Text (<NAME> and <UNIT>)
+                                try:
+                                    from PIL import ImageFont
+                                    font_large = ImageFont.truetype("Arial.ttf", 32)
+                                    font_medium = ImageFont.truetype("Arial.ttf", 26)
+                                except:
+                                    font_large = None
+                                    font_medium = None
+                                
+                                draw.text((350, 785), str(user_data.get('Name')), fill=(255, 255, 255), font=font_large)
+                                draw.text((350, 840), str(user_data.get('Unit')), fill=(255, 255, 255), font=font_medium)
+                                
+                            else:
+                                # Fallback if template.jpg is missing
+                                card_width, card_height = 800, 1000
+                                poster = Image.new("RGB", (card_width, card_height), color=(245, 247, 250))
+                                draw = ImageDraw.Draw(poster)
+                                draw.rectangle([(0, 0), (card_width, 140)], fill=(0, 138, 69))
+                                draw.text((40, 45), "OFFICIAL ENTRY PASS", fill=(255, 255, 255))
+                                photo_img = Image.open(uploaded_photo).convert("RGB").resize((220, 220))
+                                poster.paste(photo_img, (50, 180))
+                                draw.text((300, 180), f"Name: {user_data.get('Name')}", fill=(0, 0, 0))
+                                draw.text((300, 230), f"ID: {reg_id}", fill=(200, 30, 30))
+                                draw.text((300, 280), f"Unit: {user_data.get('Unit')}", fill=(50, 50, 50))
+                                qr_img_resized = qr_img.resize((200, 200))
+                                poster.paste(qr_img_resized, (550, 740))
+
+                            pass_path = f"passes/Pass_{safe_membership}.jpg"
+                            poster.save(pass_path, format="JPEG")
+
+                            reg_data = pd.DataFrame([{
+                                "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                                "Membership": membership_id,
+                                "Name": user_data.get('Name'),
+                                "Attending": attendance,
+                                "WhatsApp": whatsapp_no
+                            }])
+                            reg_data.to_csv("registrations_log.csv", mode='a', header=False, index=False)
+
+                            st.success("🎉 Registration Completed Successfully!")
+                            st.balloons()
+                            st.image(poster, caption="Your Event Entry Pass", width='stretch')
+                            
+                            with open(pass_path, "rb") as file:
+                                st.download_button(
+                                    label="📥 Download Pass to Share on WhatsApp",
+                                    data=file,
+                                    file_name=f"Pass_{safe_membership}.jpg",
+                                    mime="image/jpeg"
+                                )
 
 # ==========================================
 # TAB 2: VENUE QR SCANNER & ADMIN DASHBOARD

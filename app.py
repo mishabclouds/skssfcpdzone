@@ -182,41 +182,38 @@ with tab1:
                                 poster = poster.resize((800, 1067)) 
                                 draw = ImageDraw.Draw(poster)
                                 
-                                # 1. Place the QR Code (<QR>)
-                                # FIX: Changed border=2 to border=1 to reduce the white box
-                                qr = qrcode.QRCode(version=1, box_size=6, border=1) 
+                                # --- 1. Place the QR Code (<QR>) ---
+                                # FIX: Set border=0 to remove the thick white box entirely
+                                qr = qrcode.QRCode(version=1, box_size=6, border=0) 
                                 qr.add_data(reg_id)
                                 qr.make(fit=True)
                                 qr_img = qr.make_image(fill_color="black", back_color="white").convert("RGB")
                                 
-                                qr_size = 135 # Slightly smaller to fit perfectly
+                                qr_size = 145 # Sized exactly for the top-left box
                                 qr_img_resized = qr_img.resize((qr_size, qr_size))
-                                # FIX: Shifted slightly right and down
-                                poster.paste(qr_img_resized, (38, 32))
+                                poster.paste(qr_img_resized, (28, 25)) # Calibrated X, Y coordinates
                                 
-                                # 2. Place the User Photo (<PHOTO>)
-                                photo_width, photo_height = 220, 260
-                                user_photo = Image.open(uploaded_photo).convert("RGB").resize((photo_width, photo_height))
-                                # FIX: Moved the Y coordinate from 695 UP to 650 to cover the grey box
-                                poster.paste(user_photo, (105, 650))
+                                # --- 2. Place the User Photo (<PHOTO>) with SMART CROP ---
+                                photo_width, photo_height = 205, 275 # Exact dimensions of the gray box
+                                raw_photo = Image.open(uploaded_photo).convert("RGB")
+                                
+                                # ImageOps.fit automatically crops to the box size without squishing.
+                                # centering=(0.5, 0.15) anchors the crop near the top so faces aren't cut off!
+                                user_photo = ImageOps.fit(raw_photo, (photo_width, photo_height), centering=(0.5, 0.15))
+                                
+                                # Calibrated coordinates to cover the gray box entirely
+                                poster.paste(user_photo, (103, 622)) 
                                 
                                 # --- 3. Place the Text (<NAME> and <UNIT>) ---
                                 try:
                                     from PIL import ImageFont
-                                    # Loading your custom Montserrat font at 36pt
                                     font_large = ImageFont.truetype("Montserrat-Medium.ttf", 36)
-                                    
-                                    # Using the same font for the Unit, slightly smaller for hierarchy
                                     font_medium = ImageFont.truetype("Montserrat-Medium.ttf", 28)
                                 except Exception as e:
-                                    # If the font file isn't found, it will fall back to default
                                     font_large = None
                                     font_medium = None
                                 
-                                # Draw Name (White text, size 36)
                                 draw.text((350, 790), str(user_data.get('Name')), fill=(255, 255, 255), font=font_large)
-                                
-                                # Draw Unit (Light grey text, size 28, positioned below the name)
                                 draw.text((350, 840), str(user_data.get('Unit')), fill=(200, 200, 200), font=font_medium)
                                 
                             else:

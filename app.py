@@ -174,7 +174,7 @@ with tab1:
                             qr.make(fit=True)
                             qr_img = qr.make_image(fill_color="black", back_color="white").convert("RGB")
                             
-                            # --- GENERATE POSTER USING VIVISE TEMPLATE ---
+                           # --- GENERATE POSTER USING VIVISE TEMPLATE ---
                             template_path = "template.jpg"
                             
                             if os.path.exists(template_path):
@@ -183,26 +183,36 @@ with tab1:
                                 draw = ImageDraw.Draw(poster)
                                 
                                 # 1. Place the QR Code (<QR>)
-                                qr_size = 140
+                                # FIX: Changed border=2 to border=1 to reduce the white box
+                                qr = qrcode.QRCode(version=1, box_size=6, border=1) 
+                                qr.add_data(reg_id)
+                                qr.make(fit=True)
+                                qr_img = qr.make_image(fill_color="black", back_color="white").convert("RGB")
+                                
+                                qr_size = 135 # Slightly smaller to fit perfectly
                                 qr_img_resized = qr_img.resize((qr_size, qr_size))
-                                poster.paste(qr_img_resized, (35, 30))
+                                # FIX: Shifted slightly right and down
+                                poster.paste(qr_img_resized, (38, 32))
                                 
                                 # 2. Place the User Photo (<PHOTO>)
                                 photo_width, photo_height = 220, 260
                                 user_photo = Image.open(uploaded_photo).convert("RGB").resize((photo_width, photo_height))
-                                poster.paste(user_photo, (105, 695))
+                                # FIX: Moved the Y coordinate from 695 UP to 650 to cover the grey box
+                                poster.paste(user_photo, (105, 650))
                                 
                                 # 3. Place the Text (<NAME> and <UNIT>)
                                 try:
                                     from PIL import ImageFont
-                                    font_large = ImageFont.truetype("Arial.ttf", 32)
-                                    font_medium = ImageFont.truetype("Arial.ttf", 26)
+                                    # IMPORTANT: You MUST upload a .ttf file to your GitHub for this to work!
+                                    font_large = ImageFont.truetype("Arial.ttf", 36)
+                                    font_medium = ImageFont.truetype("Arial.ttf", 24)
                                 except:
                                     font_large = None
                                     font_medium = None
                                 
-                                draw.text((350, 785), str(user_data.get('Name')), fill=(255, 255, 255), font=font_large)
-                                draw.text((350, 840), str(user_data.get('Unit')), fill=(255, 255, 255), font=font_medium)
+                                # FIX: Shifted text down to sit cleanly below the green checkmark
+                                draw.text((350, 790), str(user_data.get('Name')), fill=(255, 255, 255), font=font_large)
+                                draw.text((350, 840), str(user_data.get('Unit')), fill=(200, 200, 200), font=font_medium) # Made Unit slightly gray/dimmer for visual hierarchy
                                 
                             else:
                                 # Fallback if template.jpg is missing

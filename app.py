@@ -200,19 +200,24 @@ with tab1:
                                 # FIX: Moved the Y coordinate from 695 UP to 650 to cover the grey box
                                 poster.paste(user_photo, (105, 650))
                                 
-                                # 3. Place the Text (<NAME> and <UNIT>)
+                                # --- 3. Place the Text (<NAME> and <UNIT>) ---
                                 try:
                                     from PIL import ImageFont
-                                    # IMPORTANT: You MUST upload a .ttf file to your GitHub for this to work!
-                                    font_large = ImageFont.truetype("Arial.ttf", 36)
-                                    font_medium = ImageFont.truetype("Arial.ttf", 24)
-                                except:
+                                    # Loading your custom Montserrat font at 36pt
+                                    font_large = ImageFont.truetype("Montserrat-Medium.ttf", 36)
+                                    
+                                    # Using the same font for the Unit, slightly smaller for hierarchy
+                                    font_medium = ImageFont.truetype("Montserrat-Medium.ttf", 28)
+                                except Exception as e:
+                                    # If the font file isn't found, it will fall back to default
                                     font_large = None
                                     font_medium = None
                                 
-                                # FIX: Shifted text down to sit cleanly below the green checkmark
+                                # Draw Name (White text, size 36)
                                 draw.text((350, 790), str(user_data.get('Name')), fill=(255, 255, 255), font=font_large)
-                                draw.text((350, 840), str(user_data.get('Unit')), fill=(200, 200, 200), font=font_medium) # Made Unit slightly gray/dimmer for visual hierarchy
+                                
+                                # Draw Unit (Light grey text, size 28, positioned below the name)
+                                draw.text((350, 840), str(user_data.get('Unit')), fill=(200, 200, 200), font=font_medium)
                                 
                             else:
                                 # Fallback if template.jpg is missing
